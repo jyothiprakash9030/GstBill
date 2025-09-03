@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Nama Tea World",
+  title: "Namma Tea World",
   description: "Tea Shop Billing Software",
   generator: "Billing software",
 }
