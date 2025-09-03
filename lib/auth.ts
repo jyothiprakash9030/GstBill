@@ -2,7 +2,7 @@
 const AUTH_KEY = "authUser"
 
 export function login(u: string, p: string) {
-  if (u === "test" && p === "test@123") {
+  if (u === "Teaworld" && p === "Teaworld@123") {
     localStorage.setItem(AUTH_KEY, JSON.stringify({ u, t: Date.now() }))
     return true
   }
