@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 import { InvoicePreview, type Item as PreviewItem, type Taxes as PreviewTaxes } from "@/components/invoice-preview"
 import { PdfExportButton } from "@/components/pdf-export"
 import { useGstBillStore } from "@/hooks/use-gst-bill-store"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 type Product = { id: string; name: string; price?: number }
 type Bank = { bankName?: string; accountNo?: string; pan?: string; branchIfsc?: string }
@@ -79,6 +79,31 @@ export default function GstBillPage() {
     reset,
   } = useGstBillStore()
 
+  // Local state to handle tax inputs as strings
+  const [taxInputs, setTaxInputs] = useState({
+    cgst: taxes.cgst !== undefined ? taxes.cgst.toString() : "",
+    sgst: taxes.sgst !== undefined ? taxes.sgst.toString() : "",
+    igst: taxes.igst !== undefined ? taxes.igst.toString() : "",
+  })
+
+  // Sync local state with store when taxes change
+  React.useEffect(() => {
+    setTaxInputs({
+      cgst: taxes.cgst !== undefined ? taxes.cgst.toString() : "",
+      sgst: taxes.sgst !== undefined ? taxes.sgst.toString() : "",
+      igst: taxes.igst !== undefined ? taxes.igst.toString() : "",
+    })
+  }, [taxes])
+
+  // Handle tax input changes
+  const handleTaxChange = (field: keyof PreviewTaxes, value: string) => {
+    setTaxInputs((prev) => ({ ...prev, [field]: value }))
+    setTaxes({
+      ...taxes,
+      [field]: value === "" ? undefined : isNaN(parseFloat(value)) ? undefined : parseFloat(value),
+    })
+  }
+
   function addItem() {
     setItems((prev) => [...prev, { id: crypto.randomUUID(), name: "", rate: 0, qty: 1, amount: 0 }])
   }
@@ -110,8 +135,13 @@ export default function GstBillPage() {
   }
 
   const previewTaxes: PreviewTaxes = useMemo(
-    () => ({ cgst: taxes.cgst, sgst: taxes.sgst, igst: taxes.igst, notes: taxes.notes }),
-    [taxes],
+    () => ({
+      cgst: taxInputs.cgst === "" ? undefined : parseFloat(taxInputs.cgst),
+      sgst: taxInputs.sgst === "" ? undefined : parseFloat(taxInputs.sgst),
+      igst: taxInputs.igst === "" ? undefined : parseFloat(taxInputs.igst),
+      notes: taxes.notes,
+    }),
+    [taxInputs, taxes.notes],
   )
 
   return (
@@ -258,22 +288,46 @@ export default function GstBillPage() {
           <div className="space-y-1">
             <Label>CGST rate (%)</Label>
             <Input
-              value={taxes.cgst ?? ""}
-              onChange={(e) => setTaxes({ cgst: e.target.value === "" ? undefined : Number(e.target.value) })}
+              type="number"
+              step="0.01"
+              min="0"
+              value={taxInputs.cgst}
+              onChange={(e) => handleTaxChange("cgst", e.target.value)}
+              onBlur={() => {
+                if (taxInputs.cgst !== "" && !isNaN(parseFloat(taxInputs.cgst))) {
+                  setTaxInputs((prev) => ({ ...prev, cgst: parseFloat(taxInputs.cgst).toString() }))
+                }
+              }}
             />
           </div>
           <div className="space-y-1">
             <Label>SGST rate (%)</Label>
             <Input
-              value={taxes.sgst ?? ""}
-              onChange={(e) => setTaxes({ sgst: e.target.value === "" ? undefined : Number(e.target.value) })}
+              type="number"
+              step="0.01"
+              min="0"
+              value={taxInputs.sgst}
+              onChange={(e) => handleTaxChange("sgst", e.target.value)}
+              onBlur={() => {
+                if (taxInputs.sgst !== "" && !isNaN(parseFloat(taxInputs.sgst))) {
+                  setTaxInputs((prev) => ({ ...prev, sgst: parseFloat(taxInputs.sgst).toString() }))
+                }
+              }}
             />
           </div>
           <div className="space-y-1">
             <Label>IGST rate (%)</Label>
             <Input
-              value={taxes.igst ?? ""}
-              onChange={(e) => setTaxes({ igst: e.target.value === "" ? undefined : Number(e.target.value) })}
+              type="number"
+              step="0.01"
+              min="0"
+              value={taxInputs.igst}
+              onChange={(e) => handleTaxChange("igst", e.target.value)}
+              onBlur={() => {
+                if (taxInputs.igst !== "" && !isNaN(parseFloat(taxInputs.igst))) {
+                  setTaxInputs((prev) => ({ ...prev, igst: parseFloat(taxInputs.igst).toString() }))
+                }
+              }}
             />
           </div>
           <div className="space-y-1 md:col-span-4">

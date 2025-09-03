@@ -38,12 +38,8 @@ export default function CategoryManager() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
   }
 
-  const base = data ?? []
-  // Merge overrides by id
-  const byId: Record<string, Product> = {}
-  base.forEach((p) => (byId[p.id] = p))
-  ;(overrides ?? []).forEach((p) => (byId[p.id] = p))
-  const products = Object.values(byId)
+  // Priority: overrides → else base data
+  const products = overrides ?? data ?? []
 
   const filtered = React.useMemo(() => {
     if (!query.trim()) return products
