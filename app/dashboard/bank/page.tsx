@@ -20,16 +20,13 @@ function normalizeBank(raw: any): Bank {
     branchIfsc:
       raw.branchIfsc ??
       raw.branch_ifsc ??
-      [raw.branch, raw.ifsc]
-        .filter((x) => typeof x === "string" && x.trim().length > 0)
-        .join(" ")
-        .trim() ??
+      [raw.branch, raw.ifsc].filter((x) => typeof x === "string" && x.trim().length > 0).join(" ").trim() ??
       "",
   }
 }
 
 export default function BankPage() {
-  const { data } = useSWR("/bankdetails.json", fetcher)
+  const { data, mutate } = useSWR("/api/bankdetails", fetcher)
   const base = React.useMemo<Bank>(() => normalizeBank(data), [data])
 
   const [override, setOverride] = React.useState<Bank | null>(null)
@@ -64,22 +61,42 @@ export default function BankPage() {
     setDraft(current)
     setEditing(true)
   }
-  function save() {
-    saveOverride(draft)
-    setEditing(false)
-    toast({ title: "Bank details saved" })
+
+  async function save() {
+    try {
+      await fetch("/api/bankdetails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      })
+      saveOverride(draft)
+      setEditing(false)
+      mutate() // refresh SWR cache
+      toast({ title: "Bank details saved" })
+    } catch {
+      toast({ title: "Error saving", variant: "destructive" })
+    }
   }
+
   function cancel() {
     setDraft(current)
     setEditing(false)
     toast({ title: "Edit cancelled" })
   }
-  function remove() {
-    saveOverride(null)
-    setDraft(normalizeBank(data))
-    setEditing(false)
-    toast({ title: "Deleted", variant: "destructive" })
+
+  async function remove() {
+    try {
+      await fetch("/api/bankdetails", { method: "DELETE" })
+      saveOverride(null)
+      setDraft({})
+      setEditing(false)
+      mutate()
+      toast({ title: "Deleted", variant: "destructive" })
+    } catch {
+      toast({ title: "Error deleting", variant: "destructive" })
+    }
   }
+
   function setDefault() {
     saveOverride(current)
     setEditing(false)
@@ -95,7 +112,6 @@ export default function BankPage() {
           <Input
             value={draft.bankName || ""}
             onChange={(e) => setDraft({ ...draft, bankName: e.target.value })}
-            placeholder=""
             disabled={disabled}
           />
         </div>
@@ -104,7 +120,6 @@ export default function BankPage() {
           <Input
             value={draft.accountNo || ""}
             onChange={(e) => setDraft({ ...draft, accountNo: e.target.value })}
-            placeholder=""
             disabled={disabled}
           />
         </div>
@@ -113,7 +128,6 @@ export default function BankPage() {
           <Input
             value={draft.pan || ""}
             onChange={(e) => setDraft({ ...draft, pan: e.target.value })}
-            placeholder=""
             disabled={disabled}
           />
         </div>
@@ -122,7 +136,6 @@ export default function BankPage() {
           <Input
             value={draft.branchIfsc || ""}
             onChange={(e) => setDraft({ ...draft, branchIfsc: e.target.value })}
-            placeholder=""
             disabled={disabled}
           />
         </div>

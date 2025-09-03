@@ -1,5 +1,7 @@
 [
-  { "id": "p1", "name": "Masala Tea", "category": "Tea", "variant": "Masala", "price": 120 },
-  { "id": "p2", "name": "Black Tea", "category": "Tea", "variant": "Black", "price": 100 },
-  { "id": "p3", "name": "Green Tea", "category": "Tea", "variant": "Green", "price": 140 }
+  {
+    "id": "ba05cef2-c0e4-4fc0-a738-1a40e622a9bb",
+    "name": "test",
+    "price": 90
+  }
 ]
