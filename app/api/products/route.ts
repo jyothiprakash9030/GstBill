@@ -1,3 +1,5 @@
+export const runtime = "nodejs";  // ✅ Must be Node.js
+
 import { NextResponse } from "next/server"
 import fs from "fs"
 import path from "path"
@@ -5,6 +7,9 @@ import path from "path"
 const filePath = path.join(process.cwd(), "public", "listofprodutes.json")
 
 function readProducts() {
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, "[]", "utf-8") // auto-create file if missing
+  }
   const raw = fs.readFileSync(filePath, "utf-8")
   return JSON.parse(raw)
 }

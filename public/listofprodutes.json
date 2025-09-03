@@ -3,5 +3,10 @@
     "id": "ba05cef2-c0e4-4fc0-a738-1a40e622a9bb",
     "name": "test",
     "price": 90
+  },
+  {
+    "id": "9d220799-e51c-4baa-b7e3-5ecc8940ae90",
+    "name": "coffee",
+    "price": 200
   }
 ]
