@@ -6,12 +6,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 
+export const runtime = 'edge';
+
 type Product = { id: string; name: string; price?: number; category?: string; variant?: string }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const fetcher: (url: string) => Promise<Product[]> = (url) =>
+  fetch(url).then((r) => r.json());
+
 
 export default function CategoryPage() {
-  const { data: products, mutate } = useSWR<Product[]>("/api/products", fetcher)
+const { data: products, mutate } = useSWR<Product[]>("/api/products", fetcher);
+
   const [name, setName] = React.useState("")
   const [price, setPrice] = React.useState("")
   const [editing, setEditing] = React.useState<string | null>(null)

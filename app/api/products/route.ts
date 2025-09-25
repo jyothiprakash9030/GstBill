@@ -1,4 +1,4 @@
-export const runtime = "nodejs";  // ✅ Must be Node.js
+export const runtime = "nodejs"; // Explicitly set to Node.js runtime
 
 import { NextResponse } from "next/server"
 import fs from "fs"
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const body = await req.json()
+  const body = (await req.json()) as any; 
   const products = readProducts()
   const idx = products.findIndex((p: any) => p.id === body.id)
   if (idx >= 0) {
@@ -44,7 +44,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const { id } = await req.json()
+  const { id } = (await req.json()) as any
   let products = readProducts()
   products = products.filter((p: any) => p.id !== id)
   writeProducts(products)

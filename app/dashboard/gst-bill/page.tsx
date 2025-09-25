@@ -11,6 +11,8 @@ import { PdfExportButton } from "@/components/pdf-export"
 import { useGstBillStore } from "@/hooks/use-gst-bill-store"
 import { useMemo, useState } from "react"
 
+export const runtime = 'edge';
+
 type Product = { id: string; name: string; price?: number }
 type Bank = { bankName?: string; accountNo?: string; pan?: string; branchIfsc?: string }
 type Company = { name?: string; gst?: string; address?: string; phone?: string; email?: string }

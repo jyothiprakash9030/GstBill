@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 
+export const runtime = 'edge';
+
 type Bank = { bankName?: string; accountNo?: string; pan?: string; branchIfsc?: string }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
