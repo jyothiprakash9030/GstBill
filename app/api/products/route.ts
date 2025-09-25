@@ -1,14 +1,52 @@
-export const runtime = "edge";
+export const runtime = "nodejs";  // ✅ Must be Node.js
 
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
+import fs from "fs"
+import path from "path"
 
-export async function GET(request: Request, context: { env: { BANK_KV: KVNamespace } }) {
-  const data = await context.env.BANK_KV.get("products", "json");
-  return NextResponse.json(data || []);
+const filePath = path.join(process.cwd(), "public", "listofprodutes.json")
+
+function readProducts() {
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, "[]", "utf-8") // auto-create file if missing
+  }
+  const raw = fs.readFileSync(filePath, "utf-8")
+  return JSON.parse(raw)
 }
 
-export async function POST(request: Request, context: { env: { BANK_KV: KVNamespace } }) {
-  const body = await request.json();
-  await context.env.BANK_KV.put("products", JSON.stringify(body));
-  return NextResponse.json({ success: true });
+function writeProducts(data: any) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8")
+}
+
+export async function GET() {
+  const products = readProducts()
+  return NextResponse.json(products)
+}
+
+export async function POST(req: Request) {
+  const body = await req.json()
+  const products = readProducts()
+  products.push(body)
+  writeProducts(products)
+  return NextResponse.json({ success: true })
+}
+
+export async function PUT(req: Request) {
+  const body = await req.json()
+  const products = readProducts()
+  const idx = products.findIndex((p: any) => p.id === body.id)
+  if (idx >= 0) {
+    products[idx] = body
+    writeProducts(products)
+    return NextResponse.json({ success: true })
+  }
+  return NextResponse.json({ success: false, message: "Not found" }, { status: 404 })
+}
+
+export async function DELETE(req: Request) {
+  const { id } = await req.json()
+  let products = readProducts()
+  products = products.filter((p: any) => p.id !== id)
+  writeProducts(products)
+  return NextResponse.json({ success: true })
 }

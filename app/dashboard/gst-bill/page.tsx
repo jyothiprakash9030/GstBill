@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import useSWR from "swr"
+import useSWR, { SWRConfiguration } from "swr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,9 +13,18 @@ import { useMemo, useState } from "react"
 
 type Product = { id: string; name: string; price?: number }
 type Bank = { bankName?: string; accountNo?: string; pan?: string; branchIfsc?: string }
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+type Company = { name?: string; gst?: string; address?: string; phone?: string; email?: string }
+
+// Explicitly type the fetcher to return Promise<Product[]>
+const fetcher = async (url: string): Promise<any> => {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Failed to fetch ${url}`)
+  return response.json()
+}
+
 const PRODUCT_OVERRIDES_KEY = "listofprodutes_overrides"
 const BANK_OVERRIDES_KEY = "bankdetails_overrides"
+const COMPANY_OVERRIDES_KEY = "companydetails_overrides"
 
 function normalizeBank(raw: any): Bank {
   if (!raw) return {}
@@ -34,8 +43,19 @@ function normalizeBank(raw: any): Bank {
   }
 }
 
+function normalizeCompany(raw: any): Company {
+  if (!raw) return {}
+  return {
+    name: raw.name ?? "",
+    gst: raw.gst ?? "",
+    address: raw.address ?? "",
+    phone: raw.phone ?? "",
+    email: raw.email ?? "",
+  }
+}
+
 export default function GstBillPage() {
-  const { data: baseProducts } = useSWR<Product[]>("/listofprodutes.json", fetcher)
+  const { data: baseProducts } = useSWR<Product[], Error>("/listofprodutes.json", fetcher)
   const [productOverrides, setProductOverrides] = React.useState<Product[] | null>(null)
   React.useEffect(() => {
     try {
@@ -61,6 +81,18 @@ export default function GstBillPage() {
   }, [])
   const bank: Bank = bankOverride ?? baseBank ?? {}
 
+  const { data: companyBaseRaw } = useSWR("/api/company", fetcher)
+  const baseCompany = useMemo(() => normalizeCompany(companyBaseRaw), [companyBaseRaw])
+  const [companyOverride, setCompanyOverride] = React.useState<Company | null>(null)
+  const [isEditingCompany, setIsEditingCompany] = React.useState(false)
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem(COMPANY_OVERRIDES_KEY)
+      if (raw) setCompanyOverride(JSON.parse(raw))
+    } catch {}
+  }, [])
+  const savedCompany: Company = companyOverride ?? baseCompany ?? {}
+
   const { toast } = useToast()
 
   const {
@@ -79,9 +111,14 @@ export default function GstBillPage() {
     reset,
   } = useGstBillStore()
 
+  // Sync company details with store on mount or when savedCompany changes
+  React.useEffect(() => {
+    setCompany(savedCompany)
+  }, [savedCompany, setCompany])
+
   // Local state to handle tax inputs as strings
   const [taxInputs, setTaxInputs] = useState({
-    cgst: taxes.cgst !== undefined ? taxes.cgst.toString() : "",
+    cgst: taxes.cgst !== undefined ? taxes.cgst.toString() : "2.5",
     sgst: taxes.sgst !== undefined ? taxes.sgst.toString() : "",
     igst: taxes.igst !== undefined ? taxes.igst.toString() : "",
   })
@@ -89,7 +126,7 @@ export default function GstBillPage() {
   // Sync local state with store when taxes change
   React.useEffect(() => {
     setTaxInputs({
-      cgst: taxes.cgst !== undefined ? taxes.cgst.toString() : "",
+      cgst: taxes.cgst !== undefined ? taxes.cgst.toString() : "2.5",
       sgst: taxes.sgst !== undefined ? taxes.sgst.toString() : "",
       igst: taxes.igst !== undefined ? taxes.igst.toString() : "",
     })
@@ -104,8 +141,35 @@ export default function GstBillPage() {
     })
   }
 
+  // Handle company details save
+  const handleSaveCompany = async () => {
+    try {
+      const response = await fetch("/api/company", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(company),
+      })
+      if (response.ok) {
+        setCompanyOverride(company)
+        localStorage.setItem(COMPANY_OVERRIDES_KEY, JSON.stringify(company))
+        setIsEditingCompany(false)
+        toast({ title: "Company details saved successfully" })
+      } else {
+        throw new Error("Failed to save company details")
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to save company details", variant: "destructive" })
+    }
+  }
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setCompany(savedCompany)
+    setIsEditingCompany(false)
+  }
+
   function addItem() {
-    setItems((prev) => [...prev, { id: crypto.randomUUID(), name: "", rate: 0, qty: 1, amount: 0 }])
+    setItems((prev:any) => [...prev, { id: crypto.randomUUID(), name: "", rate: 0, qty: 1, amount: 0, hsn: "" }])
   }
   function removeItem(id: string) {
     setItems((prev) => prev.filter((i) => i.id !== id))
@@ -115,24 +179,31 @@ export default function GstBillPage() {
       prev.map((i) => {
         if (i.id !== id) return i
         const next = { ...i, [field]: value }
-        const qty = Number(next.qty || 0)
-        const rate = Number(next.rate || 0)
-        next.amount = +(qty * rate).toFixed(2)
+        if (field !== "hsn") {
+          const qty = Number(next.qty || 0)
+          const rate = Number(next.rate || 0)
+          next.amount = +(qty * rate).toFixed(2)
+        }
         return next
       }),
     )
   }
-  function chooseProductById(itemId: string, productId: string) {
-    const p = products.find((x) => x.id === productId)
-    if (!p) return
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === itemId
-          ? { ...i, name: p.name, rate: Number(p.price ?? 0), amount: +(i.qty * Number(p.price ?? 0)).toFixed(2) }
-          : i,
-      ),
+function chooseProductById(itemId: string, productId: string) {
+  const p = products.find((x) => x.id === productId)
+  if (!p) return
+  setItems((prev) =>
+    prev.map((i:any) =>
+      i.id === itemId
+        ? {
+            ...i,
+            name: p.name,
+            rate: Number(p.price ?? 0), // ✅ keep as number
+            amount: +(i.qty * Number(p.price ?? 0)).toFixed(2), // ✅ stays number
+          }
+        : i
     )
-  }
+  )
+}
 
   const previewTaxes: PreviewTaxes = useMemo(
     () => ({
@@ -150,27 +221,63 @@ export default function GstBillPage() {
 
       {/* Company Details */}
       <section className="bg-white border rounded-lg p-4 space-y-3">
-        <h2 className="font-medium">Company Details</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-medium">Company Details</h2>
+          {!isEditingCompany ? (
+            <Button size="sm" onClick={() => setIsEditingCompany(true)}>
+              Edit
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSaveCompany}>
+                Save
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
         <div className="grid md:grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label>Company name</Label>
-            <Input value={company.name} onChange={(e) => setCompany({ name: e.target.value })} />
+            <Input
+              value={company.name ?? ""}
+              onChange={(e) => setCompany({ ...company, name: e.target.value })}
+              disabled={!isEditingCompany}
+            />
           </div>
           <div className="space-y-1">
             <Label>GST number</Label>
-            <Input value={company.gst} onChange={(e) => setCompany({ gst: e.target.value })} />
+            <Input
+              value={company.gst ?? ""}
+              onChange={(e) => setCompany({ ...company, gst: e.target.value })}
+              disabled={!isEditingCompany}
+            />
           </div>
           <div className="space-y-1 md:col-span-3">
             <Label>Address</Label>
-            <Input value={company.address} onChange={(e) => setCompany({ address: e.target.value })} />
+            <Input
+              value={company.address ?? ""}
+              onChange={(e) => setCompany({ ...company, address: e.target.value })}
+              disabled={!isEditingCompany}
+            />
           </div>
           <div className="space-y-1">
             <Label>Phone number</Label>
-            <Input value={company.phone} onChange={(e) => setCompany({ phone: e.target.value })} />
+            <Input
+              value={company.phone ?? ""}
+              onChange={(e) => setCompany({ ...company, phone: e.target.value })}
+              disabled={!isEditingCompany}
+            />
           </div>
           <div className="space-y-1">
             <Label>Email</Label>
-            <Input value={company.email} onChange={(e) => setCompany({ email: e.target.value })} />
+            <Input
+              value={company.email ?? ""}
+              onChange={(e) => setCompany({ ...company, email: e.target.value })}
+              disabled={!isEditingCompany}
+            />
           </div>
         </div>
       </section>
@@ -237,7 +344,7 @@ export default function GstBillPage() {
           {items.map((it) => {
             const currentProductId = products.find((p) => p.name === it.name)?.id ?? ""
             return (
-              <div key={it.id} className="grid gap-3 md:grid-cols-[2fr,1fr,1fr,1fr,auto]">
+              <div key={it.id} className="grid gap-3 md:grid-cols-[2fr,1fr,1fr,1fr,1fr,auto]">
                 <div className="space-y-1">
                   <Label>Product</Label>
                   <select
@@ -252,6 +359,10 @@ export default function GstBillPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div className="space-y-1">
+                  <Label>HSN/SAC</Label>
+                  <Input value={it.hsn || ""} onChange={(e) => setItemField(it.id, "hsn", e.target.value)} />
                 </div>
                 <div className="space-y-1">
                   <Label>Quantity</Label>
@@ -291,11 +402,14 @@ export default function GstBillPage() {
               type="number"
               step="0.01"
               min="0"
-              value={taxInputs.cgst}
+              value={taxInputs.cgst || "2.5"}
               onChange={(e) => handleTaxChange("cgst", e.target.value)}
               onBlur={() => {
                 if (taxInputs.cgst !== "" && !isNaN(parseFloat(taxInputs.cgst))) {
-                  setTaxInputs((prev) => ({ ...prev, cgst: parseFloat(taxInputs.cgst).toString() }))
+                  setTaxInputs((prev) => ({
+                    ...prev,
+                    cgst: parseFloat(taxInputs.cgst).toString(),
+                  }))
                 }
               }}
             />

@@ -5,7 +5,9 @@ export type Company = { name: string; gst: string; address: string; phone: strin
 export type Client = { name: string; gst: string; address: string; phone: string; email: string }
 export type Invoice = { number: string; place: string; date: string; due: string }
 export type Taxes = { cgst?: number; sgst?: number; igst?: number; notes?: string }
-export type Item = { id: string; name: string; rate: number; qty: number; amount: number }
+export type Item = {
+  [x: string]: string; id: string; name: string; rate: number; qty: number; amount: number 
+}
 export type Watermark = { text: string; enabled: boolean }
 
 type State = {

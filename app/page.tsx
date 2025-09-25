@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { SiteNavbar } from "@/components/site-navbar"
 import { SiteFooter } from "@/components/site-footer"
+import imageTea from '../public/teaworld.jpeg'
 
 export default function Home() {
   return (
@@ -23,8 +24,8 @@ export default function Home() {
               </a>
             </div>
           </div>
-          <div className="relative aspect-[4/3] rounded-lg overflow-hidden ring-1 ring-gray-200 bg-white">
-            <Image src="/invoices/gst-bill-format.jpeg" alt="Invoice layout reference" fill className="object-cover" />
+          <div className="relative aspect-[4/3] rounded-lg overflow-hidden  ring-1 ring-gray-200 bg-white">
+            <Image src={imageTea} alt="Invoice layout reference" fill className="object-contain" />
           </div>
         </div>
       </section>

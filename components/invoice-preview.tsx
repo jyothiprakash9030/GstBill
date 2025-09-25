@@ -1,7 +1,7 @@
 import { numberToIndianCurrencySentence } from "@/lib/currency"
 import type React from "react"
 
-export type Item = { id: string; name: string; rate: number; qty: number; amount: number }
+export type Item = { id: string; name: string; rate: number; qty: number; amount: number; hsn?: string }
 export type Parties = {
   company: { name?: string; gst?: string; address?: string; phone?: string; email?: string }
   client: { name?: string; gst?: string; address?: string; phone?: string; email?: string }
@@ -68,7 +68,7 @@ export function InvoicePreview({
             style={{
               transform: "rotate(-35deg)",
               letterSpacing: "0.3em",
-              color: "rgba(0,0,0,0.06)", // bolder than before but still subtle
+              color: "rgba(0,0,0,0.06)",
               userSelect: "none",
               whiteSpace: "nowrap",
             }}
@@ -80,50 +80,64 @@ export function InvoicePreview({
 
       <div className="border-b pb-2">
         <div className="text-center font-semibold">TAX INVOICE</div>
-        <div className="mt-2 grid grid-cols-2 gap-3 text-xs ">
+        <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
           <div className="space-y-1">
-            <div className="font-medium"><p className="font-semibold text-[16px]">{parties.company.name || "Company Name"}</p></div>
-            <div><p className="font-semibold">{parties.company.address}</p></div>
-            <div className="flex flex-items-center gap-1">
-               <p className="font-semibold">GSTIN :</p> 
-               <p>{parties.company.gst}</p>
+            <div className="font-medium">
+              <p className="font-semibold text-[16px]">{parties.company.name || "Company Name"}</p>
             </div>
-            <div className="flex flex-items-center gap-1">
-               <p className="font-semibold">Phone :</p> 
-               <p>{parties.company.phone}</p>
+            <div>
+              <p className="font-semibold">{parties.company.address}</p>
             </div>
-            <div className="flex flex-items-center gap-1">
-               <p className="font-semibold">Email :</p> 
-               <p>{parties.company.email}</p>
+            <div className="flex items-center gap-1">
+              <p className="font-semibold">GSTIN :</p>
+              <p>{parties.company.gst}</p>
             </div>
-           
-            {/* <Row left="GSTIN:" right={parties.company.gst} />
-            <Row left="Phone:" right={parties.company.phone} />
-            <Row left="Email:" right={parties.company.email} /> */}
+            <div className="flex items-center gap-1">
+              <p className="font-semibold">Phone :</p>
+              <p>{parties.company.phone}</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <p className="font-semibold">Email :</p>
+              <p>{parties.company.email}</p>
+            </div>
           </div>
-          <div className="flex items-end ">
-          <div className="grid grid-cols-2 h-fit gap-y-1  gap-x-6 ">
-            <div className="flex flex-items-center gap-1">
-               <p className="font-semibold">Invoice No :</p> 
-               <p>{invoice.number}</p>
+          <div className="flex  space-x-2">
+            <div className="grid grid-cols-1 h-fit gap-y-1 gap-x-6">
+              <div className="flex items-center gap-1">
+                <p className="font-semibold">Invoice No </p>
+                {/* <p>{invoice.number}</p> */}
+              </div>
+              <div className="flex items-center gap-1">
+                <p className="font-semibold">Place </p>
+                {/* <p>{invoice.place}</p> */}
+              </div>
+              <div className="flex items-center gap-1">
+                <p className="font-semibold">Invoice Date </p>
+                {/* <p>{invoice.date}</p> */}
+              </div>
+              <div className="flex items-center gap-1">
+                <p className="font-semibold">Due Date </p>
+                {/* <p>{invoice.due}</p> */}
+              </div>
             </div>
-            <div className="flex flex-items-center gap-1">
-               <p className="font-semibold">Place :</p> 
-               <p>{invoice.place}</p>
+            <div className="grid grid-cols-1 h-fit gap-y-1 gap-x-6">
+              <div className="flex items-center gap-1">
+                {/* <p className="font-semibold">Invoice No :</p> */}
+                <p>: {invoice.number}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                {/* <p className="font-semibold">Place :</p> */}
+                <p>: {invoice.place}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                {/* <p className="font-semibold">Invoice Date :</p> */}
+                <p>: {invoice.date}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                {/* <p className="font-semibold">Due Date :</p> */}
+                <p>: {invoice.due}</p>
+              </div>
             </div>
-            <div className="flex flex-items-center gap-1">
-               <p className="font-semibold">Invoice Date :</p> 
-               <p>{invoice.date}</p>
-            </div>
-            <div className="flex flex-items-center gap-1">
-               <p className="font-semibold">Due Date :</p> 
-               <p>{invoice.due}</p>
-            </div>
-            {/* <Row left="Invoice No." right={invoice.number} />
-            <Row left="Place" right={invoice.place} />
-            <Row left="Invoice Date" right={invoice.date} />
-            <Row left="Due Date" right={invoice.due} /> */}
-          </div>
           </div>
         </div>
       </div>
@@ -131,60 +145,32 @@ export function InvoicePreview({
       <div className="grid grid-cols-2 gap-3 border-b py-2 text-xs">
         <div>
           <div className="font-semibold text-[14px]">Client Details</div>
-
           <div className="space-y-1 mt-1">
-      
-          <div className="font-medium"><p className="font-semibold text-[16px]">{parties.client.name}</p></div>
-          
-          <div className="flex flex-items-center gap-1">
-            <p className="font-semibold">GSTIN :</p>
-            <p>{parties.client.gst}</p>
-          </div>
-          <div className="flex flex-items-center gap-1">
-            <p className="font-semibold">Phone :</p>
-            <p>{parties.client.phone}</p>
-          </div>
-          {parties.client.email &&
-            <div className="flex flex-items-center gap-1">
-              <p className="font-semibold">Email :</p>
+            <div className="font-medium">
+              <p className="font-semibold text-[16px]">{parties.client.name}</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <p className="font-semibold">GSTIN :</p>
+              <p>{parties.client.gst}</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <p className="font-semibold">Phone :</p>
               <p>{parties.client.phone}</p>
-            </div>}
-
+            </div>
+            {parties.client.email && (
+              <div className="flex items-center gap-1">
+                <p className="font-semibold">Email :</p>
+                <p>{parties.client.email}</p>
+              </div>
+            )}
           </div>
-
-              {/* {parties.client.email && <Row left="Email" right={parties.client.email} />}
-
-          <div>{parties.client.address}</div>
-          <Row left="GSTIN" right={parties.client.gst} />
-          <Row left="Phone" right={parties.client.phone} />
-          {parties.client.email && <Row left="Email" right={parties.client.email} />} */}
         </div>
-        <div >
+        <div>
           <div className="font-semibold text-[14px]">Client Address</div>
-          {/* <div className="font-medium">{parties.client.name}</div> */}
-          {/* <div>{parties.client.address}</div> */}
-          <div className="flex flex-items-center gap-1 mt-2">
+          <div className="flex items-center gap-1 mt-2">
             <p className="font-semibold">Address:</p>
             <p>{parties.client.address}</p>
           </div>
-
-          {/* <div className="flex flex-items-center gap-1">
-            <p className="font-semibold">GSTIN :</p>
-            <p>{parties.client.gst}</p>
-          </div> */}
-          {/* <div className="flex flex-items-center gap-1">
-            <p className="font-semibold">Phone :</p>
-            <p>{parties.client.phone}</p>
-          </div>
-          {parties.client.email &&
-            <div className="flex flex-items-center gap-1">
-              <p className="font-semibold">Email :</p>
-              <p>{parties.client.phone}</p>
-            </div>} */}
-
-          {/* <Row left="GSTIN" right={parties.client.gst} />
-          <Row left="Phone" right={parties.client.phone} /> */}
-
         </div>
       </div>
 
@@ -194,6 +180,7 @@ export function InvoicePreview({
             <tr className="bg-[#f3f4f6]">
               <th className="border px-2 py-1 text-left">Sl</th>
               <th className="border px-2 py-1 text-left">Description of Goods</th>
+              <th className="border px-2 py-1">HSN/SAC</th>
               <th className="border px-2 py-1">Qty</th>
               <th className="border px-2 py-1">Rate</th>
               <th className="border px-2 py-1">Amount</th>
@@ -202,7 +189,7 @@ export function InvoicePreview({
           <tbody>
             {items.length === 0 && (
               <tr>
-                <td colSpan={5} className="border px-2 py-6 text-center text-[#9ca3af]">
+                <td colSpan={6} className="border px-2 py-6 text-center text-[#9ca3af]">
                   No items
                 </td>
               </tr>
@@ -211,15 +198,16 @@ export function InvoicePreview({
               <tr key={it.id}>
                 <td className="border px-2 py-1">{idx + 1}</td>
                 <td className="border px-2 py-1">{it.name}</td>
+                <td className="border px-2 py-1 text-center">{it.hsn || ""}</td>
                 <td className="border px-2 py-1 text-center">{it.qty}</td>
-                <td className="border px-2 py-1 text-right">{it.rate.toFixed(2)}</td>
-                <td className="border px-2 py-1 text-right">{it.amount.toFixed(2)}</td>
+<td className="border px-2 py-1 text-right">{Number(it.rate ?? 0).toFixed(2)}</td>
+<td className="border px-2 py-1 text-right">{Number(it.amount ?? 0).toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
             <tr>
-              <td className="border px-2 py-1 text-right font-medium" colSpan={4}>
+              <td className="border px-2 py-1 text-right font-medium" colSpan={5}>
                 Total
               </td>
               <td className="border px-2 py-1 text-right font-medium">{taxable.toFixed(2)}</td>
@@ -228,33 +216,25 @@ export function InvoicePreview({
         </table>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mt-2 text-xs">
-        {/* <div>
+      <div className="grid grid-cols-2 gap-3.mt-2 text-xs">
+        <div>
           {taxes.notes && (
             <>
-              <div className="font-medium">Notes</div>
-              <div className="border p-2 min-h-[48px] w-[1/2] bg-yellow-700 text-wrap">{taxes.notes}</div>
+              <div className="font-semibold text-[14px] mb-1">Notes</div>
+              <div className="border p-2 min-h-[48px] break-words whitespace-pre-wrap">
+                {taxes.notes}
+              </div>
             </>
           )}
-        </div> */}
-        <div>
-  {taxes.notes && (
-    <>
-      <div className="font-semibold text-[14px] mb-1">Notes</div>
-      <div className="border p-2 min-h-[48px] break-words whitespace-pre-wrap">
-        {taxes.notes}
-      </div>
-    </>
-  )}
-</div>
+        </div>
         <div className="border p-2 space-y-1">
           {taxes.cgst ? <Row left={`CGST ${taxes.cgst}%`} right={cgst.toFixed(2)} /> : null}
           {taxes.sgst ? <Row left={`SGST ${taxes.sgst}%`} right={sgst.toFixed(2)} /> : null}
           {taxes.igst ? <Row left={`IGST ${taxes.igst}%`} right={igst.toFixed(2)} /> : null}
-          <Row
+          {/* <Row
             left={<span className="font-medium">Tax Total</span>}
             right={<span className="font-medium">{taxTotal.toFixed(2)}</span>}
-          />
+          /> */}
           <hr className="border-t-1 border-gray-400" />
           <Row
             left={<span className="font-semibold">Grand Total</span>}
@@ -266,23 +246,33 @@ export function InvoicePreview({
       <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
         <div className="border p-2">
           <div>
-            <span className="font-semibold text-[13px]">Tax Amount (in words):</span> {numberToIndianCurrencySentence(grand)}
+            <span className="font-semibold text-[13px]">Tax Amount (in words):</span>{" "}
+            {numberToIndianCurrencySentence(grand)}
           </div>
         </div>
         <div className="border p-2 space-y-1">
           <div className="font-semibold text-[14px] mb-2">Company's Bank Details</div>
-          <div><span className="font-semibold ">Bank Name: </span> <span className="ml-1">{bank?.bankName}</span></div>
-          <div><span className="font-semibold">A/c No: </span> <span className="ml-1">{bank?.accountNo}</span></div>
-          <div><span className="font-semibold">Company's PAN:</span> <span className="ml-1">{bank?.pan}</span></div>
-          <div><span className="font-semibold">Branch & IFSC:</span> <span className="ml-1">{bank?.branchIfsc}</span></div>
-          {/* <div>A/c No: {bank?.accountNo}</div>
-          <div>Company's PAN: {bank?.pan}</div>
-          <div>Branch & IFSC: {bank?.branchIfsc}</div> */}
+          <div>
+            <span className="font-semibold">Bank Name: </span>
+            <span className="ml-1">{bank?.bankName}</span>
+          </div>
+          <div>
+            <span className="font-semibold">A/c No: </span>
+            <span className="ml-1">{bank?.accountNo}</span>
+          </div>
+          <div>
+            <span className="font-semibold">Company's PAN: </span>
+            <span className="ml-1">{bank?.pan}</span>
+          </div>
+          <div>
+            <span className="font-semibold">Branch & IFSC: </span>
+            <span className="ml-1">{bank?.branchIfsc}</span>
+          </div>
         </div>
       </div>
 
       <div className="mt-6 flex justify-end">
-        <div className="w-56 text-center  p-2 text-xs">
+        <div className="w-56 text-center p-2 text-xs">
           <div className="h-12" />
           <div className="font-medium">Authorised Signatory</div>
         </div>
