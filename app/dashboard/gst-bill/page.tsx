@@ -10,6 +10,15 @@ import { InvoicePreview, type Item as PreviewItem, type Taxes as PreviewTaxes } 
 import { PdfExportButton } from "@/components/pdf-export"
 import { useGstBillStore } from "@/hooks/use-gst-bill-store"
 import { useMemo, useState } from "react"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
 
 export const runtime = 'edge';
 
@@ -54,6 +63,82 @@ function normalizeCompany(raw: any): Company {
     phone: raw.phone ?? "",
     email: raw.email ?? "",
   }
+}
+
+function formatToDDMMYYYY(isoDate: string): string {
+  if (!isoDate) return "";
+  const date = new Date(isoDate);
+  if (isNaN(date.getTime())) return "";
+  return format(date, "dd-MM-yyyy");
+}
+
+function parseToISO(dateStr: string): string | null {
+  if (!dateStr) return null;
+  // Try parsing as DD-MM-YYYY
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+    const date = new Date(year, month - 1, day);
+    if (!isNaN(date.getTime()) && date.getDate() === day && date.getMonth() === month - 1) {
+      return date.toISOString().split("T")[0];
+    }
+  }
+  // Fallback to direct Date parsing
+  const date = new Date(dateStr);
+  if (!isNaN(date.getTime())) {
+    return date.toISOString().split("T")[0];
+  }
+  return null;
+}
+
+interface DatePickerProps {
+  date: string
+  onDateChange: (date: string) => void
+  placeholder?: string
+}
+
+function DatePicker({ date, onDateChange, placeholder }: DatePickerProps) {
+  const [open, setOpen] = React.useState(false)
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant={"outline"}
+          className={cn(
+            "w-full justify-start text-left font-normal",
+            !date && "text-muted-foreground"
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {date ? formatToDDMMYYYY(date) : <span>{placeholder}</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={date ? new Date(date) : undefined}
+          onSelect={(selectedDate) => {
+            if (!selectedDate) {
+              onDateChange("");
+              setOpen(false);
+              return;
+            }
+            // Use local date components to avoid timezone shift
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+            const day = String(selectedDate.getDate()).padStart(2, "0");
+            const isoDate = `${year}-${month}-${day}`;
+            onDateChange(isoDate);
+            setOpen(false);
+          }}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 export default function GstBillPage() {
@@ -121,7 +206,7 @@ export default function GstBillPage() {
   // Local state to handle tax inputs as strings
   const [taxInputs, setTaxInputs] = useState({
     cgst: taxes.cgst !== undefined ? taxes.cgst.toString() : "2.5",
-    sgst: taxes.sgst !== undefined ? taxes.sgst.toString() : "",
+    sgst: taxes.sgst !== undefined ? taxes.sgst.toString() : "2.5",
     igst: taxes.igst !== undefined ? taxes.igst.toString() : "",
   })
 
@@ -129,7 +214,7 @@ export default function GstBillPage() {
   React.useEffect(() => {
     setTaxInputs({
       cgst: taxes.cgst !== undefined ? taxes.cgst.toString() : "2.5",
-      sgst: taxes.sgst !== undefined ? taxes.sgst.toString() : "",
+      sgst: taxes.sgst !== undefined ? taxes.sgst.toString() : "2.5",
       igst: taxes.igst !== undefined ? taxes.igst.toString() : "",
     })
   }, [taxes])
@@ -212,7 +297,7 @@ function chooseProductById(itemId: string, productId: string) {
       cgst: taxInputs.cgst === "" ? undefined : parseFloat(taxInputs.cgst),
       sgst: taxInputs.sgst === "" ? undefined : parseFloat(taxInputs.sgst),
       igst: taxInputs.igst === "" ? undefined : parseFloat(taxInputs.igst),
-      notes: taxes.notes,
+    notes: taxes.notes || "Goods once sold cannot be taken back",
     }),
     [taxInputs, taxes.notes],
   )
@@ -325,11 +410,19 @@ function chooseProductById(itemId: string, productId: string) {
           </div>
           <div className="space-y-1">
             <Label>Invoice date</Label>
-            <Input type="date" value={invoice.date} onChange={(e) => setInvoice({ date: e.target.value })} />
+            <DatePicker
+              date={invoice.date}
+              onDateChange={(isoDate) => setInvoice({ ...invoice, date: isoDate })}
+              placeholder="Pick a date"
+            />
           </div>
           <div className="space-y-1">
             <Label>Due date</Label>
-            <Input type="date" value={invoice.due} onChange={(e) => setInvoice({ due: e.target.value })} />
+            <DatePicker
+              date={invoice.due}
+              onDateChange={(isoDate) => setInvoice({ ...invoice, due: isoDate })}
+              placeholder="Pick a date"
+            />
           </div>
         </div>
       </section>
@@ -440,7 +533,7 @@ function chooseProductById(itemId: string, productId: string) {
               value={taxInputs.igst}
               onChange={(e) => handleTaxChange("igst", e.target.value)}
               onBlur={() => {
-                if (taxInputs.igst !== "" && !isNaN(parseFloat(taxInputs.igst))) {
+                if (taxInputs.igst !== "2.5" && !isNaN(parseFloat(taxInputs.igst))) {
                   setTaxInputs((prev) => ({ ...prev, igst: parseFloat(taxInputs.igst).toString() }))
                 }
               }}
@@ -448,7 +541,7 @@ function chooseProductById(itemId: string, productId: string) {
           </div>
           <div className="space-y-1 md:col-span-4">
             <Label>Additional notes</Label>
-            <Textarea value={taxes.notes || ""} onChange={(e) => setTaxes({ notes: e.target.value })} />
+            <Textarea value={taxes.notes || "Goods once sold cannot be taken back"} onChange={(e) => setTaxes({ notes: e.target.value })} />
           </div>
         </div>
       </section>

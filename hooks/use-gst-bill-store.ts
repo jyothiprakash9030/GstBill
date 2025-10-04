@@ -32,7 +32,7 @@ const initial: Omit<
 > = {
   company: { name: "", gst: "", address: "", phone: "", email: "" },
   client: { name: "", gst: "", address: "", phone: "", email: "" },
-  invoice: { number: "", place: "", date: "", due: "" },
+  invoice: { number: "", place: "Chennai", date: "", due: "" },
   taxes: { cgst: undefined, sgst: undefined, igst: undefined, notes: "" },
   watermark: { text: "", enabled: false },
   items: [],

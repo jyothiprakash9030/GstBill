@@ -19,9 +19,9 @@ export default function Home() {
               <a href="/login" className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md">
                 Login to start
               </a>
-              <a href="/dashboard/gst-bill" className="inline-flex items-center px-4 py-2 border rounded-md">
+              {/* <a href="/dashboard/gst-bill" className="inline-flex items-center px-4 py-2 border rounded-md">
                 Open Builder
-              </a>
+              </a> */}
             </div>
           </div>
           <div className="relative aspect-[4/3] rounded-lg overflow-hidden  ring-1 ring-gray-200 bg-white">

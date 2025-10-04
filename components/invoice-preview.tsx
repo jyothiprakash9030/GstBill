@@ -79,7 +79,7 @@ export function InvoicePreview({
       )}
 
       <div className="border-b pb-2">
-        <div className="text-center font-semibold">TAX INVOICE</div>
+        <div className="text-center font-semibold"></div>
         <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
           <div className="space-y-1">
             <div className="font-medium">
