@@ -7,9 +7,8 @@ export async function GET() {
     // Fetch the static JSON from the public folder via the same origin.
     // Uses NEXT_PUBLIC_BASE_URL for prod (full URL) or defaults to relative path for local dev.
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-    const res = await fetch(`${baseUrl}/companydetails.json`, {
-      cache: 'force-cache', // Optional: Caches the response for performance; change to 'no-store' if needed
-    });
+    const res = await fetch(`${baseUrl}/companydetails.json`);
+    // Removed cache option to avoid local dev compatibility issues; defaults to 'default' mode.
     if (!res.ok) throw new Error("File not found");
     const data = await res.json();
     return NextResponse.json(data);
