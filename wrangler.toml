@@ -1,0 +1,11 @@
+name = "gstbill"  # Your Pages project name
+compatibility_date = "2025-10-04"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "GST_KV"  # Arbitrary binding name—use this in code
+id = "your-kv-namespace-id"  # From Step 1
+
+[[pages_build_output_dir]]
+direction = "output"
+binding = "PAGE"

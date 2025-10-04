@@ -1,17 +1,17 @@
+const { withEdgeRuntime } = require('@cloudflare/next-on-pages');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    runtime: 'nodejs', // Forces Node for all routes (Next.js 15+)
-  },
+  // Removed: experimental: { runtime: 'nodejs' } – this conflicts with Edge
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
     unoptimized: true,
   },
-}
+};
 
-export default nextConfig
+module.exports = withEdgeRuntime(nextConfig);

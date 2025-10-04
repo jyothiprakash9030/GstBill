@@ -1,4 +1,4 @@
-export const runtime = "nodejs"; // Explicitly set to Node.js runtime
+export const runtime = "edge"; // Explicitly set to Node.js runtime
 
 import { NextResponse } from "next/server"
 import fs from "fs"

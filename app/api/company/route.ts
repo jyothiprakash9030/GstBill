@@ -1,4 +1,4 @@
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 import { NextResponse } from "next/server"
 import { promises as fs } from "fs"
