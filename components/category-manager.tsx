@@ -1,45 +1,16 @@
 "use client"
 
 import * as React from "react"
-import useSWR from "swr"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-
-type Product = {
-  id: string
-  name: string
-  category?: string
-  variant?: string
-  price?: number
-}
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
-
-const STORAGE_KEY = "listofprodutes_overrides"
+import { Product, useProducts } from "@/lib/data-sources"
 
 export default function CategoryManager() {
-  const { data, isLoading } = useSWR<Product[]>("/listofprodutes.json", fetcher)
-  const [overrides, setOverrides] = React.useState<Product[] | null>(null)
+  const { products, isLoading, upsertProduct, deleteProduct } = useProducts()
   const [query, setQuery] = React.useState("")
   const [selectedId, setSelectedId] = React.useState<string | "">("")
   const [editingId, setEditingId] = React.useState<string>("")
   const [draft, setDraft] = React.useState<Partial<Product>>({})
-
-  // Load overrides from localStorage
-  React.useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) setOverrides(JSON.parse(raw))
-    } catch {}
-  }, [])
-
-  const saveOverrides = (next: Product[]) => {
-    setOverrides(next)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  }
-
-  // Priority: overrides → else base data
-  const products = overrides ?? data ?? []
 
   const filtered = React.useMemo(() => {
     if (!query.trim()) return products
@@ -60,20 +31,21 @@ export default function CategoryManager() {
     setDraft({})
   }
 
-  const saveEdit = () => {
-    if (!editingId) return
-    const next = [...products]
-    const idx = next.findIndex((x) => x.id === editingId)
-    if (idx >= 0) {
-      next[idx] = { ...next[idx], ...draft, id: editingId }
+  const saveEdit = async () => {
+    if (!editingId || !draft.name) return // Basic validation
+    const toSave: Product = {
+      id: editingId,
+      name: draft.name,
+      price: draft.price ?? 0,
+      ...(draft.category && { category: draft.category }),
+      ...(draft.variant && { variant: draft.variant }),
     }
-    saveOverrides(next)
+    await upsertProduct(toSave)
     cancelEdit()
   }
 
   const deleteItem = (id: string) => {
-    const next = products.filter((p) => p.id !== id)
-    saveOverrides(next)
+    deleteProduct(id)
     if (selectedId === id) setSelectedId("")
   }
 
