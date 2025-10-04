@@ -1,4 +1,6 @@
-const { withEdgeRuntime } = require("@cloudflare/next-on-pages");
+// next.config.mjs
+import pkg from "@cloudflare/next-on-pages";
+const { withEdgeRuntime } = pkg;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -13,4 +15,4 @@ const nextConfig = {
   },
 };
 
-module.exports = withEdgeRuntime(nextConfig);
+export default withEdgeRuntime(nextConfig);
