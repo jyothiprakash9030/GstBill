@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle } 
 import { SiteNavbar } from "@/components/site-navbar"
 import { SiteFooter } from "@/components/site-footer"
 import { Eye, EyeOff } from "lucide-react"
+import { AlertDialogDescription } from "@radix-ui/react-alert-dialog"
 
 export default function LoginPage() {
   const [open, setOpen] = useState(false)
@@ -77,12 +78,14 @@ export default function LoginPage() {
       </div>
       <SiteFooter />
       <AlertDialog open={open}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Login successful</AlertDialogTitle>
-          </AlertDialogHeader>
-          <div className="text-sm text-gray-600">You will be redirected to the dashboard.</div>
-        </AlertDialogContent>
+      <AlertDialogContent>
+  <AlertDialogHeader>
+    <AlertDialogTitle>Login successful</AlertDialogTitle>
+    <AlertDialogDescription>
+      You will be redirected to the dashboard.
+    </AlertDialogDescription>
+  </AlertDialogHeader>
+</AlertDialogContent>
       </AlertDialog>
     </main>
   )
