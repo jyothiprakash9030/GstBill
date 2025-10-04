@@ -1,38 +1,30 @@
 export const runtime = "edge";
+import { NextResponse } from "next/server";
 
-import { NextResponse } from "next/server"
-import { promises as fs } from "fs"
-import path from "path"
-
-const filePath = path.join(process.cwd(), "public", "companydetails.json")
-
-// GET request (fetch data)
+// GET request – read JSON from public folder
 export async function GET() {
   try {
-    const data = await fs.readFile(filePath, "utf-8")
-    return NextResponse.json(JSON.parse(data))
-  } catch {
-    return NextResponse.json({}, { status: 404 })
-  }
-}
-
-// POST request (save/update data)
-export async function POST(req: Request) {
-  try {
-    const body = await req.json()
-    await fs.writeFile(filePath, JSON.stringify(body, null, 2), "utf-8")
-    return NextResponse.json({ success: true, message: "Company details saved" })
+    const res = await fetch(new URL("../../../public/companydetails.json", import.meta.url));
+    if (!res.ok) throw new Error("File not found");
+    const data = await res.json();
+    return NextResponse.json(data);
   } catch (err) {
-    return NextResponse.json({ success: false, error: String(err) }, { status: 500 })
+    return NextResponse.json({ error: String(err) }, { status: 404 });
   }
 }
 
-// DELETE request (delete file)
+// POST request – Edge cannot write files
+export async function POST() {
+  return NextResponse.json(
+    { error: "Cannot write in Edge runtime" },
+    { status: 500 }
+  );
+}
+
+// DELETE request – Edge cannot delete files
 export async function DELETE() {
-  try {
-    await fs.unlink(filePath)
-    return NextResponse.json({ success: true, message: "Company details deleted" })
-  } catch (err) {
-    return NextResponse.json({ success: false, error: String(err) }, { status: 500 })
-  }
+  return NextResponse.json(
+    { error: "Cannot delete in Edge runtime" },
+    { status: 500 }
+  );
 }
