@@ -4,11 +4,17 @@ import { NextResponse } from "next/server";
 // GET request – read JSON from public folder
 export async function GET() {
   try {
-    const res = await fetch(new URL("../../../public/companydetails.json", import.meta.url));
+    // Fetch the static JSON from the public folder via the same origin.
+    // Uses NEXT_PUBLIC_BASE_URL for prod (full URL) or defaults to relative path for local dev.
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+    const res = await fetch(`${baseUrl}/companydetails.json`, {
+      cache: 'force-cache', // Optional: Caches the response for performance; change to 'no-store' if needed
+    });
     if (!res.ok) throw new Error("File not found");
     const data = await res.json();
     return NextResponse.json(data);
   } catch (err) {
+    console.error(err); // Logs errors for debugging (visible in Cloudflare/Edge logs)
     return NextResponse.json({ error: String(err) }, { status: 404 });
   }
 }
