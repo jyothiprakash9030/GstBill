@@ -1,4 +1,4 @@
-import { withEdgeRuntime } from "@cloudflare/next-on-pages";
+const { withEdgeRuntime } = require("@cloudflare/next-on-pages");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -13,4 +13,4 @@ const nextConfig = {
   },
 };
 
-export default withEdgeRuntime(nextConfig);
+module.exports = withEdgeRuntime(nextConfig);
