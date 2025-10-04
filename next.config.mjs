@@ -1,18 +1,20 @@
 // next.config.mjs
-import pkg from "@cloudflare/next-on-pages";
-const { withEdgeRuntime } = pkg;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true, // recommended
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true, // ignore ESLint errors during build
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true, // ignore TypeScript errors during build
   },
   images: {
-    unoptimized: true,
+    unoptimized: true, // disable Next.js image optimization
+  },
+  experimental: {
+    appDir: true, // if using app/ directory
   },
 };
 
-export default withEdgeRuntime(nextConfig);
+export default nextConfig;
